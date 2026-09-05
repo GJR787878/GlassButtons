@@ -19,6 +19,27 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    // Release 签名配置（从 Gradle 属性读取，CI 自动注入）
+    signingConfigs {
+        release {
+            if (project.hasProperty('KEYSTORE_FILE')) {
+                storeFile file(project.KEYSTORE_FILE)
+                storePassword project.KEYSTORE_PASSWORD
+                keyAlias project.KEY_ALIAS
+                keyPassword project.KEY_PASSWORD
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (project.hasProperty('KEYSTORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
 }
 
 dependencies {

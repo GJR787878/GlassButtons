@@ -32,8 +32,23 @@ jobs:
       - name: 赋予 gradlew 执行权限
         run: chmod +x gradlew
 
-      - name: 编译 Demo Release APK
-        run: ./gradlew :demo:assembleRelease --stacktrace
+      - name: 生成签名密钥
+        run: |
+          keytool -genkeypair -v \
+            -keystore $HOME/demo.keystore \
+            -alias demo \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass demo1234 -keypass demo1234 \
+            -dname "CN=GlassButtons Demo, OU=Demo, O=Demo, L=Demo, ST=Demo, C=CN"
+
+      - name: 编译并签名 Demo Release APK
+        run: |
+          ./gradlew :demo:assembleRelease \
+            -PKEYSTORE_FILE=$HOME/demo.keystore \
+            -PKEYSTORE_PASSWORD=demo1234 \
+            -PKEY_ALIAS=demo \
+            -PKEY_PASSWORD=demo1234 \
+            --stacktrace
 
       - name: 上传 APK 产物
         uses: actions/upload-artifact@v4
