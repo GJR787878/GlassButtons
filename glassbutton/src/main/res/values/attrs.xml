@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 玻璃胶囊按钮 -->
+    <declare-styleable name="GlassCapsuleButton">
+        <!-- 是否处于玻璃选中态（蓝字 + 加粗白描边） -->
+        <attr name="glassSelected" format="boolean" />
+        <!-- 圆角半径，默认 28dp -->
+        <attr name="glassCornerRadius" format="dimension" />
+    </declare-styleable>
+
+    <!-- 玻璃胶囊单选按钮 -->
+    <declare-styleable name="GlassRadioButton">
+        <!-- 圆角半径，默认 28dp -->
+        <attr name="glassCornerRadius" format="dimension" />
+    </declare-styleable>
+
+    <!-- 玻璃底部导航栏 -->
+    <declare-styleable name="GlassNavBar">
+        <!-- 整体圆角半径，默认 28dp -->
+        <attr name="glassCornerRadius" format="dimension" />
+        <!-- 导航栏高度，默认 76dp -->
+        <attr name="glassHeight" format="dimension" />
+    </declare-styleable>
+</resources>

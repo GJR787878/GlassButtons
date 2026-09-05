@@ -1,0 +1,22 @@
+// 玻璃拟态按钮组件库模块
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace 'com.gjr.glassbutton'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 26
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // 纯 Android framework 实现，无任何第三方依赖
+}
