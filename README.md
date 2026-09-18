@@ -105,18 +105,23 @@ group.addView(rb2);
 group.check(rb1.getId());
 ```
 
-### 玻璃底部导航栏
+### 平板适配与圆角规范对应
 
-```java
-GlassNavBar nav = new GlassNavBar(context);
-nav.addItem(getDrawable(R.drawable.ic_home), "主页");
-nav.addItem(getDrawable(R.drawable.ic_config), "配置");
-nav.addItem(getDrawable(R.drawable.ic_settings), "设置");
-nav.setSelected(0);
-nav.setOnItemSelectedListener(index -> {
-    // 切换页面
-});
-```
+**平板左侧悬浮胶囊导航（当前为手写实现）**
+- `GlassNavBar` 目前是**固定横向、固定高度（默认 76dp）**的底部导航，未内置竖排/侧栏模式。
+- 平板（`smallestScreenWidthDp >= 600`）上的**屏幕左侧悬浮胶囊导航**（垂直居中、约半屏高、不铺满）在 RSB 中是手写实现（`MainActivity.createSideNav`），`GlassNavBar` 暂不可直接做平板侧栏。
+- 若想统一到组件库，需给 `GlassNavBar` 增加垂直布局（`setOrientation`/竖排 item）能力后再用。
+- 平板断点与「重排非拉伸」规范见 [app-dev-specs](https://github.com/GJR787878/app-dev-specs) §3.4。
+
+**项目圆角规范对应**
+组件默认圆角 **28dp**。接入不同项目时按其既有规范统一，用 `setGlassCornerRadius(float dp)` 或 XML `app:glassCornerRadius` 设置：
+
+| 项目 | 圆角 | 代码 |
+|------|------|------|
+| DRS（DeviceResetSpoofer） | **24dp** | `btn.setGlassCornerRadius(24f)` |
+| RSB（RamStatusBar） | **28dp** | 默认值即可 |
+
+> 弹窗圆角应与按钮圆角保持一致（见 app-dev-specs §3.2）。
 
 ### XML 布局
 
