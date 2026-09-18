@@ -44,7 +44,7 @@
 |------|------|
 | `GlassCapsuleButton` | 玻璃胶囊按钮，支持 `setGlassSelected()` 切换选中态 |
 | `GlassRadioButton` | 玻璃胶囊单选按钮，去掉原生圆圈，兼容 RadioGroup |
-| `GlassNavBar` | 玻璃底部导航栏，支持图标+文字、选中高亮、点击回调 |
+| `GlassNavBar` | 玻璃导航栏（底部横排 / 左侧竖排侧栏），支持图标+文字、选中高亮、点击回调 |
 | `GlassButtonDrawable` | 底层玻璃背景 Drawable，可直接套用到任意 View |
 | `GlassButtonStyle` | 样式常量与工具方法 |
 
@@ -107,14 +107,34 @@ group.check(rb1.getId());
 
 ### 平板适配与圆角规范对应
 
-**平板左侧悬浮胶囊导航（当前为手写实现）**
-- `GlassNavBar` 目前是**固定横向、固定高度（默认 76dp）**的底部导航，未内置竖排/侧栏模式。
-- 平板（`smallestScreenWidthDp >= 600`）上的**屏幕左侧悬浮胶囊导航**（垂直居中、约半屏高、不铺满）在 RSB 中是手写实现（`MainActivity.createSideNav`），`GlassNavBar` 暂不可直接做平板侧栏。
-- 若想统一到组件库，需给 `GlassNavBar` 增加垂直布局（`setOrientation`/竖排 item）能力后再用。
+**平板左侧悬浮胶囊导航（GlassNavBar 内置竖排模式）**
+- `GlassNavBar` 默认横向（底部导航，固定高度 76dp）；**内置竖排侧栏模式**，平板（`smallestScreenWidthDp >= 600`）可直接用作屏幕左侧悬浮胶囊（垂直居中、约半屏高、不铺满）：
+
+```java
+GlassNavBar nav = new GlassNavBar(context);
+nav.addItem(getDrawable(R.drawable.ic_home), "主页");
+nav.addItem(getDrawable(R.drawable.ic_config), "配置");
+nav.addItem(getDrawable(R.drawable.ic_settings), "设置");
+nav.setSelected(0);
+
+// 平板左侧悬浮胶囊
+nav.setOrientation(LinearLayout.VERTICAL);   // 竖排：导航项等高均分
+nav.setSideWidthDp(72f);                     // 固定胶囊宽度 72dp
+nav.setCornerRadius(28f);                    // 圆角（DRS 用 24f）
+
+FrameLayout.LayoutParams p = new FrameLayout.LayoutParams(
+        ViewGroup.LayoutParams.WRAP_CONTENT, screenHeightPx / 2);
+p.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL; // 垂直居中、约半屏高
+p.leftMargin = Math.round(20 * density);
+root.addView(nav, p);
+```
+
+- 竖排模式下：`onMeasure` 固定宽度（`setSideWidthDp`）、高度交由外部控制；横排模式固定高度（`setHeightDp`，默认 76dp）。
+- `setOrientation()` 可在 `addItem` 之后调用，会自动更新已有导航项的布局参数。
 - 平板断点与「重排非拉伸」规范见 [app-dev-specs](https://github.com/GJR787878/app-dev-specs) §3.4。
 
 **项目圆角规范对应**
-组件默认圆角 **28dp**。接入不同项目时按其既有规范统一，用 `setGlassCornerRadius(float dp)` 或 XML `app:glassCornerRadius` 设置：
+组件默认圆角 **28dp**。接入不同项目时按其既有规范统一，用 `setGlassCornerRadius(float dp)`（GlassCapsuleButton/GlassNavBar）或 XML `app:glassCornerRadius` 设置：
 
 | 项目 | 圆角 | 代码 |
 |------|------|------|
@@ -194,7 +214,7 @@ GlassButtons/
 │       │   ├── GlassButtonStyle.java      # 样式常量与工具方法
 │       │   ├── GlassCapsuleButton.java    # 玻璃胶囊按钮
 │       │   ├── GlassRadioButton.java      # 玻璃单选按钮
-│       │   └── GlassNavBar.java           # 玻璃底部导航栏
+│       │   └── GlassNavBar.java           # 玻璃导航栏（底部横排/左侧竖排）
 │       └── res/values/attrs.xml           # XML 自定义属性
 ├── demo/                     # 演示 App（可独立编译安装）
 │   ├── build.gradle
