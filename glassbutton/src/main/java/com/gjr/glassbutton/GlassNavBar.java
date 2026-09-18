@@ -17,9 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 玻璃拟态底部导航栏。
+ * 玻璃拟态导航栏（底部横排 / 左侧竖排侧栏）。
  *
- * 整体为玻璃胶囊容器（半透明深色底 + 渐变描边），内部横向排列导航项。
+ * 整体为玻璃胶囊容器（半透明深色底 + 渐变描边），内部排列导航项。
+ * 默认横向（底部导航，固定高度 76dp）；可 setOrientation(LinearLayout.VERTICAL)
+ * 切换为左侧竖排侧栏（固定宽度 72dp，高度交由外部控制，如屏高一半）。
  * 选中项：淡白高亮底（0x2EFFFFFF，全圆角）+ 蓝色图标文字（0xFF0A84FF）
  * 未选中项：透明底 + 白色图标文字
  *
@@ -29,6 +31,10 @@ import java.util.List;
  *   nav.addItem(icon2, "配置");
  *   nav.setSelected(0);
  *   nav.setOnItemSelectedListener(index -> { ... });
+ *
+ *   // 平板左侧悬浮胶囊（sw600dp+，垂直居中、约半屏高、不铺满）：
+ *   nav.setOrientation(LinearLayout.VERTICAL);
+ *   nav.setSideWidthDp(72f);
  */
 public class GlassNavBar extends FrameLayout {
 
@@ -40,6 +46,8 @@ public class GlassNavBar extends FrameLayout {
 
     private float mCornerRadiusDp = 28f;
     private float mHeightDp = 76f;
+    private float mSideWidthDp = 72f;
+    private int mOrientation = LinearLayout.HORIZONTAL;
 
     public interface OnItemSelectedListener {
         void onItemSelected(int index);
@@ -68,16 +76,10 @@ public class GlassNavBar extends FrameLayout {
     }
 
     private void init() {
-        // 玻璃容器背景
-        float density = getResources().getDisplayMetrics().density;
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(GlassButtonStyle.COLOR_NAV_BG);
-        bg.setCornerRadius(Math.round(mCornerRadiusDp * density));
-        bg.setStroke(Math.round(1 * density), GlassButtonStyle.COLOR_NAV_BORDER);
-        setBackground(bg);
+        applyGlassBackground();
 
         LinearLayout inner = new LinearLayout(getContext());
-        inner.setOrientation(LinearLayout.HORIZONTAL);
+        inner.setOrientation(mOrientation);
         inner.setGravity(Gravity.CENTER);
         inner.setId(View.generateViewId());
         inner.setTag("glass_nav_inner");
@@ -127,10 +129,7 @@ public class GlassNavBar extends FrameLayout {
         final int index = mItemViews.size();
         item.setOnClickListener(v -> setSelected(index));
 
-        LinearLayout.LayoutParams itemParams = new LinearLayout.LayoutParams(
-                0, LayoutParams.MATCH_PARENT, 1f);
-        itemParams.gravity = Gravity.CENTER;
-        getInner().addView(item, itemParams);
+        getInner().addView(item, makeItemParams());
 
         mItemViews.add(item);
         mIcons.add(iconView);
@@ -183,10 +182,86 @@ public class GlassNavBar extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        // 固定高度
         float density = getResources().getDisplayMetrics().density;
-        int heightPx = Math.round(mHeightDp * density);
-        int hSpec = MeasureSpec.makeMeasureSpec(heightPx, MeasureSpec.EXACTLY);
-        super.onMeasure(widthMeasureSpec, hSpec);
+        if (mOrientation == LinearLayout.VERTICAL) {
+            // 竖排侧栏：固定宽度，高度交由外部控制（如屏高一半 / wrap）
+            int widthPx = Math.round(mSideWidthDp * density);
+            int wSpec = MeasureSpec.makeMeasureSpec(widthPx, MeasureSpec.EXACTLY);
+            super.onMeasure(wSpec, heightMeasureSpec);
+        } else {
+            // 横向底部导航：固定高度
+            int heightPx = Math.round(mHeightDp * density);
+            int hSpec = MeasureSpec.makeMeasureSpec(heightPx, MeasureSpec.EXACTLY);
+            super.onMeasure(widthMeasureSpec, hSpec);
+        }
+    }
+
+    // ==================== 竖排侧栏 / 外观配置 ====================
+
+    /**
+     * 设置排列方向：LinearLayout.HORIZONTAL（底部导航）或 LinearLayout.VERTICAL（左侧竖排侧栏）。
+     * 可在 addItem 之后调用，会同步更新已有导航项的布局参数。
+     */
+    public void setOrientation(int orientation) {
+        if (orientation != LinearLayout.HORIZONTAL && orientation != LinearLayout.VERTICAL) {
+            return;
+        }
+        mOrientation = orientation;
+        getInner().setOrientation(orientation);
+        for (int i = 0; i < mItemViews.size(); i++) {
+            getInner().updateViewLayout(mItemViews.get(i), makeItemParams());
+        }
+        requestLayout();
+    }
+
+    public int getOrientation() {
+        return mOrientation;
+    }
+
+    /** 设置圆角半径（dp），DRS 用 24f、RSB 用 28f。 */
+    public void setCornerRadius(float cornerRadiusDp) {
+        mCornerRadiusDp = cornerRadiusDp;
+        applyGlassBackground();
+        requestLayout();
+    }
+
+    public float getCornerRadius() {
+        return mCornerRadiusDp;
+    }
+
+    /** 设置底部导航固定高度（dp）。 */
+    public void setHeightDp(float heightDp) {
+        mHeightDp = heightDp;
+        requestLayout();
+    }
+
+    /** 设置竖排侧栏固定宽度（dp），平板左侧胶囊常用 72f。 */
+    public void setSideWidthDp(float sideWidthDp) {
+        mSideWidthDp = sideWidthDp;
+        requestLayout();
+    }
+
+    private LinearLayout.LayoutParams makeItemParams() {
+        LinearLayout.LayoutParams lp;
+        if (mOrientation == LinearLayout.VERTICAL) {
+            // 竖排侧栏：导航项等高均分容器高度
+            lp = new LinearLayout.LayoutParams(
+                    LayoutParams.MATCH_PARENT, 0, 1f);
+        } else {
+            // 横向底部导航：导航项等宽均分容器宽度
+            lp = new LinearLayout.LayoutParams(
+                    0, LayoutParams.MATCH_PARENT, 1f);
+        }
+        lp.gravity = Gravity.CENTER;
+        return lp;
+    }
+
+    private void applyGlassBackground() {
+        float density = getResources().getDisplayMetrics().density;
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(GlassButtonStyle.COLOR_NAV_BG);
+        bg.setCornerRadius(Math.round(mCornerRadiusDp * density));
+        bg.setStroke(Math.round(1 * density), GlassButtonStyle.COLOR_NAV_BORDER);
+        setBackground(bg);
     }
 }

@@ -178,6 +178,48 @@ public class MainActivity extends Activity {
             buttonLayer.addView(btn, matchWidth(density));
         }
 
+        // ===== 导航栏：底部横排 / 左侧竖排胶囊 切换演示 =====
+        final GlassNavBar navBar = new GlassNavBar(this);
+        navBar.addItem(makeCircleIcon(0xFFFFFFFF, density), "主页");
+        navBar.addItem(makeCircleIcon(0xFFFFFFFF, density), "配置");
+        navBar.addItem(makeCircleIcon(0xFFFFFFFF, density), "设置");
+        navBar.setSelected(0);
+
+        final int screenHeightPx = getResources().getDisplayMetrics().heightPixels;
+        final boolean[] isSide = {false};
+
+        GlassCapsuleButton toggleNav = new GlassCapsuleButton(this);
+        toggleNav.setText("切换导航：底部横排 / 左侧竖排胶囊");
+        toggleNav.setOnClickListener(v -> {
+            if (!isSide[0]) {
+                // → 左侧竖排胶囊（平板导航形态：垂直居中、约半屏高、不铺满）
+                navBar.setOrientation(LinearLayout.VERTICAL);
+                navBar.setCornerRadius(28f);
+                navBar.setSideWidthDp(72f);
+                FrameLayout.LayoutParams p = new FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        screenHeightPx / 2);
+                p.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+                p.leftMargin = Math.round(20 * density);
+                navBar.setLayoutParams(p);
+                isSide[0] = true;
+            } else {
+                // → 底部横排
+                navBar.setOrientation(LinearLayout.HORIZONTAL);
+                navBar.setCornerRadius(28f);
+                FrameLayout.LayoutParams p = new FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
+                p.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+                p.leftMargin = Math.round(24 * density);
+                p.rightMargin = Math.round(24 * density);
+                p.bottomMargin = Math.round(24 * density);
+                navBar.setLayoutParams(p);
+                isSide[0] = false;
+            }
+        });
+        buttonLayer.addView(toggleNav, matchWidth(density));
+
         // 底部提示
         TextView endHint = new TextView(this);
         endHint.setText("—— 已到底部，向上滑动回顾 ——");
@@ -194,13 +236,7 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
 
-        // ===== 底部固定玻璃导航栏 =====
-        GlassNavBar navBar = new GlassNavBar(this);
-        navBar.addItem(makeCircleIcon(0xFFFFFFFF, density), "主页");
-        navBar.addItem(makeCircleIcon(0xFFFFFFFF, density), "配置");
-        navBar.addItem(makeCircleIcon(0xFFFFFFFF, density), "设置");
-        navBar.setSelected(0);
-
+        // ===== 底部固定玻璃导航栏（初始横排；可点上方按钮切换左侧竖排胶囊） =====
         FrameLayout.LayoutParams navParams = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
