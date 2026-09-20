@@ -1,6 +1,7 @@
 // 玻璃拟态按钮组件库模块
 plugins {
     id 'com.android.library'
+    id 'maven-publish'
 }
 
 android {
@@ -19,4 +20,18 @@ android {
 
 dependencies {
     // 纯 Android framework 实现，无任何第三方依赖
+}
+
+// JitPack 发布配置
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.GJR787878'
+                artifactId = 'GlassButtons'
+                version = '1.0.0'
+            }
+        }
+    }
 }

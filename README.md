@@ -95,6 +95,28 @@ nav.setSideWidthDp(72f);  // 固定宽度 72dp
 
 ## 快速使用
 
+### 方式零：JitPack 远程依赖（推荐，无需拷贝）
+
+**1. 根 build.gradle 添加 JitPack 仓库：**
+```groovy
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }  // 加这行
+    }
+}
+```
+
+**2. app 模块 build.gradle 添加依赖：**
+```groovy
+dependencies {
+    implementation 'com.github.GJR787878:GlassButtons:1.0.0'
+}
+```
+
+> 首次构建 JitPack 会自动编译，约需 1-2 分钟。之后即拉即用。
+
 ### 方式一：作为 Library 模块依赖
 
 1. 将 `glassbutton/` 目录拷贝到你的项目根目录
