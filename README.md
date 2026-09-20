@@ -48,6 +48,51 @@
 | `GlassButtonDrawable` | 底层玻璃背景 Drawable，可直接套用到任意 View |
 | `GlassButtonStyle` | 样式常量与工具方法 |
 
+## GlassNavBar 导航栏使用
+
+### 底部横排导航（默认）
+
+```java
+GlassNavBar nav = new GlassNavBar(context);
+nav.addItem(icon1, "主页");
+nav.addItem(icon2, "配置");
+nav.addItem(icon3, "设置");
+nav.setSelected(0);  // 默认选中第一项
+nav.setOnItemSelectedListener(index -> {
+    // 处理切换
+});
+```
+
+### 左侧竖排侧栏（平板适配）
+
+```java
+nav.setOrientation(LinearLayout.VERTICAL);
+nav.setSideWidthDp(72f);  // 固定宽度 72dp
+// 高度由外部控制，建议屏高一半左右
+```
+
+### 样式参数
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `mCornerRadiusDp` | 28dp | 导航栏圆角半径 |
+| `mHeightDp` | 76dp | 底部导航固定高度 |
+| `mSideWidthDp` | 72dp | 竖排侧栏固定宽度 |
+
+### 选中项高亮
+
+选中项背景为淡白高亮（`0x2EFFFFFF`，约 18% 白），圆角与导航栏一致（28dp）。图标和文字自动变为 iOS 蓝 `#0A84FF`。
+
+> **踩坑记录**：选中项高亮背景的圆角必须和外层导航栏圆角一致，否则会出现内外圆角不贴合的视觉问题。不要用 `setCornerRadius(1000f)` 全圆角，要用和导航栏相同的圆角值。
+
+### 图标
+
+`addItem()` 接受 `Drawable` 图标，建议用纯色矢量图，会自动被着色：
+- 未选中：白色
+- 选中：iOS 蓝
+
+可用 `GradientDrawable.createOval()` 快速生成占位图标。
+
 ## 快速使用
 
 ### 方式一：作为 Library 模块依赖
