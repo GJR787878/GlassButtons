@@ -111,7 +111,7 @@ dependencyResolutionManagement {
 **2. app 模块 build.gradle 添加依赖：**
 ```groovy
 dependencies {
-    implementation 'com.github.GJR787878:GlassButtons:1.0.0'
+    implementation 'com.github.GJR787878:GlassButtons:v1.0.1'
 }
 ```
 
