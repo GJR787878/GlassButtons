@@ -63,15 +63,10 @@ public class GlassNavBar extends FrameLayout {
 
     public GlassNavBar(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        if (attrs != null) {
-            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GlassNavBar);
-            float density = context.getResources().getDisplayMetrics().density;
-            mCornerRadiusDp = a.getDimension(R.styleable.GlassNavBar_glassCornerRadius,
-                    Math.round(28f * density)) / density;
-            mHeightDp = a.getDimension(R.styleable.GlassNavBar_glassHeight,
-                    Math.round(76f * density)) / density;
-            a.recycle();
-        }
+        float density = context.getResources().getDisplayMetrics().density;
+        mCornerRadiusDp = 28f;
+        mHeightDp = 76f;
+        mSideWidthDp = 200f;
         init();
     }
 
@@ -170,11 +165,11 @@ public class GlassNavBar extends FrameLayout {
         ImageView icon = mIcons.get(index);
         TextView label = mLabels.get(index);
         if (selected) {
-            // 选中项高亮背景，圆角和导航栏一致
+            // 选中项高亮背景，半透明
             float density = getResources().getDisplayMetrics().density;
             float radius = Math.round(mCornerRadiusDp * density);
             GradientDrawable bg = new GradientDrawable();
-            bg.setColor(GlassButtonStyle.COLOR_TAB_SELECTED_BG);
+            bg.setColor(0x4DFFFFFF); // 30% 白，更实一点
             bg.setCornerRadius(radius);
             item.setBackground(bg);
             icon.setColorFilter(GlassButtonStyle.COLOR_ACCENT, PorterDuff.Mode.SRC_IN);
@@ -264,11 +259,16 @@ public class GlassNavBar extends FrameLayout {
 
     private void applyGlassBackground() {
         float density = getResources().getDisplayMetrics().density;
+        // 磨砂玻璃效果：半透明深色泛底
         GradientDrawable bg = new GradientDrawable();
-        // 半透明玻璃：30% 不透明度，内容可穿透但有玻璃感
-        bg.setColor(0x4D1C1C1E);
+        bg.setShape(GradientDrawable.RECTANGLE);
         bg.setCornerRadius(Math.round(mCornerRadiusDp * density));
-        bg.setStroke(Math.round(1 * density), 0x40FFFFFF);
+        // 从深灰半透明到稍浅的深灰，不那么白
+        int[] colors = {0xB32C2C2E, 0x993C3C3E}; // 70% 不透明深灰 → 60% 稍浅
+        bg.setColors(colors);
+        bg.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        // 1dp 淡白描边
+        bg.setStroke(Math.round(1 * density), 0x55FFFFFF);
         setBackground(bg);
     }
 }
