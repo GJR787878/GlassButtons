@@ -265,8 +265,8 @@ public class GlassNavBar extends FrameLayout {
     private void applyGlassBackground() {
         float density = getResources().getDisplayMetrics().density;
         GradientDrawable bg = new GradientDrawable();
-        // 真正半透明：10% 不透明度，内容清晰穿透
-        bg.setColor(0x1A1C1C1E);
+        // 完全透明，只保留描边，内容完全穿透
+        bg.setColor(0x00000000);
         bg.setCornerRadius(Math.round(mCornerRadiusDp * density));
         bg.setStroke(Math.round(1 * density), 0x40FFFFFF);
         setBackground(bg);
