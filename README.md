@@ -85,6 +85,25 @@ nav.setSideWidthDp(72f);  // 固定宽度 72dp
 
 > **踩坑记录**：选中项高亮背景的圆角必须和外层导航栏圆角一致，否则会出现内外圆角不贴合的视觉问题。不要用 `setCornerRadius(1000f)` 全圆角，要用和导航栏相同的圆角值。
 
+### 内容区布局（关键！）
+
+导航栏浮在内容上面时，**padding 必须设置在内容 LinearLayout 上，不是 ScrollView 上**：
+
+```xml
+<FrameLayout>
+    <ScrollView>
+        <LinearLayout
+            android:id="@+id/content"
+            android:paddingBottom="140dp" />  <!-- ✅ 正确：padding 在内容上 -->
+    </ScrollView>
+    <GlassNavBar
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="0dp" />  <!-- ✅ 贴底 -->
+</FrameLayout>
+```
+
+> **踩坑记录**：把 paddingBottom 设置在 ScrollView 上时，ScrollView 高度是 match_parent（全屏），padding 不会正确生效到内容底部，导致最后几个选项被导航栏挡住。必须设置在内容 LinearLayout 上。
+
 ### 图标
 
 `addItem()` 接受 `Drawable` 图标，建议用纯色矢量图，会自动被着色：
