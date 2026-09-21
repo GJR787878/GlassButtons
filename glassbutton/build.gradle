@@ -35,7 +35,7 @@ afterEvaluate {
             release(MavenPublication) {
                 groupId = 'com.github.GJR787878'
                 artifactId = 'GlassButtons'
-                version = '1.0.1'
+                version = '1.0.2'
                 from components.release
             }
         }

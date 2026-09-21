@@ -170,7 +170,13 @@ public class GlassNavBar extends FrameLayout {
         ImageView icon = mIcons.get(index);
         TextView label = mLabels.get(index);
         if (selected) {
-            item.setBackground(GlassButtonStyle.createSelectedHighlight());
+            // 选中项高亮背景，圆角和导航栏一致
+            float density = getResources().getDisplayMetrics().density;
+            float radius = Math.round(mCornerRadiusDp * density);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setColor(GlassButtonStyle.COLOR_TAB_SELECTED_BG);
+            bg.setCornerRadius(radius);
+            item.setBackground(bg);
             icon.setColorFilter(GlassButtonStyle.COLOR_ACCENT, PorterDuff.Mode.SRC_IN);
             label.setTextColor(GlassButtonStyle.COLOR_ACCENT);
         } else {
