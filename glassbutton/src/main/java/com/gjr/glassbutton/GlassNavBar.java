@@ -259,12 +259,12 @@ public class GlassNavBar extends FrameLayout {
 
     private void applyGlassBackground() {
         float density = getResources().getDisplayMetrics().density;
-        // 磨砂玻璃效果：半透明深色泛底
+        // 磨砂玻璃效果：上白下透（顶部更实、底部更透，内容透出）
         GradientDrawable bg = new GradientDrawable();
         bg.setShape(GradientDrawable.RECTANGLE);
         bg.setCornerRadius(Math.round(mCornerRadiusDp * density));
         // 从深灰半透明到稍浅的深灰，不那么白
-        int[] colors = {0xB32C2C2E, 0x993C3C3E}; // 70% 不透明深灰 → 60% 稍浅
+        int[] colors = {0xF06A6A72, 0x882C2C2E}; // 上白下透磨砂：94% 较白的深灰 → 53% 更深更透
         bg.setColors(colors);
         bg.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
         // 1dp 淡白描边
