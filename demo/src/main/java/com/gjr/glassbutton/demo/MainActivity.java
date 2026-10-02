@@ -31,15 +31,7 @@ import java.util.HashMap;
 
 /**
  * GlassButtons 综合演示（纯 Java、无 XML 布局、无第三方依赖）。
- *
- * 结构：
- *   FrameLayout root（纯黑）
- *   ├── 三个全屏 ScrollView（导航一/二/三），full-bleed 铺到悬浮导航背后
- *   ├── 导航二专用的固定底部条（版本号 + 检查更新）
- *   └── GlassNavBar 悬浮：手机底部横排；平板（sw600）左侧竖排，内容 left padding 避让
- *
- * 所有选项状态写入 SharedPreferences：退出重开、旋转屏幕均保留。
- * 弹窗统一深色主题。
+ * 全部界面文案经 L 多语言支持；语言切换后 recreate() 真正重渲染。
  */
 public class MainActivity extends Activity {
 
@@ -52,10 +44,11 @@ public class MainActivity extends Activity {
     private GlassNavBar nav;
     private boolean tablet;
 
-    // 通用整行开关：key -> 胶囊（base 文案存在 tag 里）
+    // 带文案的整行开关：key -> 胶囊（base 文案在 tag）
     private final HashMap<String, GlassCapsuleButton> switchBtns = new HashMap<>();
+    // 仅显示 开/关 的整行开关（导航三）：key -> 胶囊
+    private final HashMap<String, GlassCapsuleButton> onOffBtns = new HashMap<>();
 
-    // 导航一需要回读刷新的控件
     private GlassCapsuleButton btnDialog, btnLang, btnInput;
     private RadioGroup dialogGroup, pageRadioGroup;
     private TextView opacityValue;
@@ -63,17 +56,12 @@ public class MainActivity extends Activity {
     private GlassCapsuleButton opacityPreview;
     private final View[] colorSwatches = new View[3];
 
-    // 导航三的行与小开关
-    private final GlassCapsuleButton[] tab3Indicators = new GlassCapsuleButton[10];
-
-    private static final String[] LANGS = {"简体中文", "English", "繁體中文"};
-    private static final int[] COLORS = {0xFFFF3B30, 0xFF34C759, 0xFF0A84FF};
-    // 正好 20 个汉字的描述
-    private static final String DESC20 = "开关描述这是一段整整二十个汉字的测试文字";
-
     private int dp(float v) {
         return Math.round(v * getResources().getDisplayMetrics().density);
     }
+
+    private int MATCH() { return ViewGroup.LayoutParams.MATCH_PARENT; }
+    private int WRAP() { return ViewGroup.LayoutParams.WRAP_CONTENT; }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,9 +72,9 @@ public class MainActivity extends Activity {
         root = new FrameLayout(this);
         root.setBackgroundColor(0xFF000000);
 
-        tab1 = makeScroll(buildTab1(), 112);
-        tab2 = makeScroll(buildTab2(), 210);
-        tab3 = makeScroll(buildTab3(), 112);
+        tab1 = makeScroll(buildTab1());
+        tab2 = makeScroll(buildTab2());
+        tab3 = makeScroll(buildTab3());
 
         root.addView(tab1, new FrameLayout.LayoutParams(MATCH(), MATCH()));
         root.addView(tab2, new FrameLayout.LayoutParams(MATCH(), MATCH()));
@@ -104,9 +92,6 @@ public class MainActivity extends Activity {
         loadAll();
     }
 
-    private int MATCH() { return ViewGroup.LayoutParams.MATCH_PARENT; }
-    private int WRAP() { return ViewGroup.LayoutParams.WRAP_CONTENT; }
-
     // ------------------------------------------------------------------
     // 通用构造
     // ------------------------------------------------------------------
@@ -119,7 +104,7 @@ public class MainActivity extends Activity {
         return inner;
     }
 
-    private ScrollView makeScroll(View child, int bottomDp) {
+    private ScrollView makeScroll(View child) {
         ScrollView sv = new ScrollView(this);
         sv.setBackgroundColor(0xFF000000);
         sv.addView(child, new ScrollView.LayoutParams(MATCH(), WRAP()));
@@ -144,71 +129,84 @@ public class MainActivity extends Activity {
         return v;
     }
 
-    private GlassCapsuleButton makeSwitch(String key, String base) {
+    /** 带文案开关：胶囊显示 base（开/关）。 */
+    private GlassCapsuleButton makeLabeledSwitch(String key, String base) {
         GlassCapsuleButton b = new GlassCapsuleButton(this);
         b.setTag(base);
         b.setOnClickListener(v -> {
-            boolean nx = !sp.getBoolean(key, false);
-            sp.edit().putBoolean(key, nx).apply();
-            applySwitch(key);
+            sp.edit().putBoolean(key, !sp.getBoolean(key, false)).apply();
+            applyLabeled(key);
         });
         switchBtns.put(key, b);
         return b;
     }
 
-    private void applySwitch(String key) {
+    private void applyLabeled(String key) {
         GlassCapsuleButton b = switchBtns.get(key);
         boolean on = sp.getBoolean(key, false);
         b.setGlassSelected(on);
-        b.setText(b.getTag() + "（" + (on ? "开" : "关") + "）");
+        b.setText(b.getTag() + "（" + L.t(this, on ? "on" : "off") + "）");
+    }
+
+    /** 仅显示 开/关 的整行开关（导航三）。 */
+    private GlassCapsuleButton makeOnOffSwitch(String key) {
+        GlassCapsuleButton b = new GlassCapsuleButton(this);
+        b.setOnClickListener(v -> {
+            sp.edit().putBoolean(key, !sp.getBoolean(key, false)).apply();
+            applyOnOff(key);
+        });
+        onOffBtns.put(key, b);
+        return b;
+    }
+
+    private void applyOnOff(String key) {
+        GlassCapsuleButton b = onOffBtns.get(key);
+        boolean on = sp.getBoolean(key, false);
+        b.setGlassSelected(on);
+        b.setText(L.t(this, on ? "on" : "off"));
     }
 
     // ------------------------------------------------------------------
-    // 导航一：10 个选项
+    // 导航一
     // ------------------------------------------------------------------
 
     private View buildTab1() {
         LinearLayout inner = newInner(112);
 
-        // 1-3 开关
-        inner.addView(label("选项一：开关"));
-        inner.addView(block(makeSwitch("t1_s1", "选项一")));
-        inner.addView(label("选项二：开关"));
-        inner.addView(block(makeSwitch("t1_s2", "选项二")));
-        inner.addView(label("选项三：开关"));
-        inner.addView(block(makeSwitch("t1_s3", "选项三")));
+        inner.addView(label(L.t(this, "l1")));
+        inner.addView(block(makeLabeledSwitch("t1_s1", L.optName(this, 1))));
+        inner.addView(label(L.t(this, "l2")));
+        inner.addView(block(makeLabeledSwitch("t1_s2", L.optName(this, 2))));
+        inner.addView(label(L.t(this, "l3")));
+        inner.addView(block(makeLabeledSwitch("t1_s3", L.optName(this, 3))));
 
-        // 4 弹窗 5 选项
-        inner.addView(label("选项四：弹窗五选项"));
+        inner.addView(label(L.t(this, "l4")));
         btnDialog = new GlassCapsuleButton(this);
         btnDialog.setOnClickListener(v -> showChoiceDialog());
         inner.addView(block(btnDialog));
 
-        // 5 全屏二级界面
-        inner.addView(label("选项五：全屏二级界面"));
+        inner.addView(label(L.t(this, "l5")));
         GlassCapsuleButton btnSecond = new GlassCapsuleButton(this);
-        btnSecond.setText("打开全屏二级界面");
+        btnSecond.setText(L.t(this, "open_second"));
         btnSecond.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, SecondScreenActivity.class)));
         inner.addView(block(btnSecond));
 
-        // 6 三语言循环
-        inner.addView(label("选项六：点击循环切换语言"));
+        inner.addView(label(L.t(this, "l6")));
         btnLang = new GlassCapsuleButton(this);
         btnLang.setOnClickListener(v -> {
-            int nx = (sp.getInt("t1_lang", 0) + 1) % 3;
+            int nx = (L.idx(this) + 1) % 3;
             sp.edit().putInt("t1_lang", nx).apply();
-            refreshLang();
+            recreate(); // 真正按新语言重建整个界面
         });
         inner.addView(block(btnLang));
 
-        // 7 页面内三互斥单选
-        inner.addView(label("选项七：页面内互斥单选组"));
+        inner.addView(label(L.t(this, "l7")));
         pageRadioGroup = new RadioGroup(this);
         pageRadioGroup.setOrientation(RadioGroup.VERTICAL);
         for (int i = 0; i < 3; i++) {
             GlassRadioButton rb = new GlassRadioButton(this);
-            rb.setText("单选项" + (i + 1));
+            rb.setText(L.radioOpt(this, i + 1));
             rb.setId(View.generateViewId());
             final int idx = i;
             rb.setOnClickListener(v -> sp.edit().putInt("t1_radio", idx).apply());
@@ -218,8 +216,7 @@ public class MainActivity extends Activity {
         }
         inner.addView(block(pageRadioGroup));
 
-        // 8 透明度滑杆
-        inner.addView(label("选项八：透明度滑杆（0-100）"));
+        inner.addView(label(L.t(this, "l8")));
         opacityValue = new TextView(this);
         opacityValue.setTextColor(0xFF0A84FF);
         opacityValue.setTextSize(14);
@@ -234,7 +231,7 @@ public class MainActivity extends Activity {
         opacitySeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar sb, int p, boolean fromUser) {
                 sp.edit().putInt("t1_opacity", p).apply();
-                opacityValue.setText("当前透明度：" + p + "%");
+                opacityValue.setText(L.t(MainActivity.this, "cur_opacity") + p + "%");
                 opacityPreview.setAlpha(p / 100f);
             }
             @Override public void onStartTrackingTouch(SeekBar sb) {}
@@ -242,17 +239,15 @@ public class MainActivity extends Activity {
         });
         inner.addView(block(opacitySeek));
         opacityPreview = new GlassCapsuleButton(this);
-        opacityPreview.setText("透明度预览");
+        opacityPreview.setText(L.t(this, "opacity_preview"));
         inner.addView(block(opacityPreview));
 
-        // 9 文本输入
-        inner.addView(label("选项九：点击输入文本"));
+        inner.addView(label(L.t(this, "l9")));
         btnInput = new GlassCapsuleButton(this);
         btnInput.setOnClickListener(v -> showInputDialog());
         inner.addView(block(btnInput));
 
-        // 10 三色选择器
-        inner.addView(label("选项十：颜色选择器"));
+        inner.addView(label(L.t(this, "l10")));
         LinearLayout colorRow = new LinearLayout(this);
         colorRow.setOrientation(LinearLayout.HORIZONTAL);
         colorRow.setGravity(Gravity.CENTER);
@@ -276,7 +271,7 @@ public class MainActivity extends Activity {
 
     private void showChoiceDialog() {
         LinearLayout box = darkBox();
-        box.addView(darkTitle("请选择一个选项"));
+        box.addView(darkTitle(L.t(this, "dlg_title")));
 
         ScrollView sv = new ScrollView(this);
         dialogGroup = new RadioGroup(this);
@@ -284,7 +279,7 @@ public class MainActivity extends Activity {
         int sel = sp.getInt("t1_dialog", 0);
         for (int i = 0; i < 5; i++) {
             GlassRadioButton rb = new GlassRadioButton(this);
-            rb.setText("弹窗选项" + (i + 1));
+            rb.setText(L.dialogOpt(this, i + 1));
             rb.setId(View.generateViewId());
             final int idx = i;
             rb.setOnClickListener(v -> {
@@ -300,7 +295,7 @@ public class MainActivity extends Activity {
         box.addView(sv);
 
         GlassCapsuleButton done = new GlassCapsuleButton(this);
-        done.setText("完成");
+        done.setText(L.t(this, "done"));
         LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(MATCH(), WRAP());
         bp.topMargin = dp(16);
         box.addView(done, bp);
@@ -312,14 +307,14 @@ public class MainActivity extends Activity {
 
     private void showInputDialog() {
         LinearLayout box = darkBox();
-        box.addView(darkTitle("请输入文本"));
+        box.addView(darkTitle(L.t(this, "input_title")));
 
         EditText et = new EditText(this);
         et.setInputType(InputType.TYPE_CLASS_TEXT);
         et.setText(sp.getString("t1_input", ""));
         et.setTextColor(Color.WHITE);
         et.setHintTextColor(0xFF888888);
-        et.setHint("输入胶囊要显示的文字");
+        et.setHint(L.t(this, "input_hint"));
         GradientDrawable etBg = new GradientDrawable();
         etBg.setCornerRadius(dp(16));
         etBg.setColor(0xFF2C2C2E);
@@ -331,9 +326,9 @@ public class MainActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         GlassCapsuleButton cancel = new GlassCapsuleButton(this);
-        cancel.setText("取消");
+        cancel.setText(L.t(this, "cancel"));
         GlassCapsuleButton ok = new GlassCapsuleButton(this);
-        ok.setText("确认");
+        ok.setText(L.t(this, "ok"));
         LinearLayout.LayoutParams wl = new LinearLayout.LayoutParams(0, WRAP(), 1f);
         wl.setMargins(dp(6), 0, dp(6), 0);
         row.addView(cancel, wl);
@@ -345,8 +340,7 @@ public class MainActivity extends Activity {
         AlertDialog dlg = darkDialog(box);
         cancel.setOnClickListener(v -> dlg.dismiss());
         ok.setOnClickListener(v -> {
-            String s = et.getText().toString();
-            sp.edit().putString("t1_input", s).apply();
+            sp.edit().putString("t1_input", et.getText().toString()).apply();
             refreshInput();
             dlg.dismiss();
         });
@@ -354,14 +348,14 @@ public class MainActivity extends Activity {
     }
 
     // ------------------------------------------------------------------
-    // 导航二：20 开关 + 固定底部条（版本号 / 检查更新）
+    // 导航二
     // ------------------------------------------------------------------
 
     private View buildTab2() {
         LinearLayout inner = newInner(210);
         for (int i = 1; i <= 20; i++) {
-            inner.addView(label("开关" + cn(i)));
-            inner.addView(block(makeSwitch("t2_s" + i, "开关" + cn(i))));
+            inner.addView(label(L.swName(this, i)));
+            inner.addView(block(makeLabeledSwitch("t2_s" + i, L.swName(this, i))));
         }
         return inner;
     }
@@ -378,20 +372,20 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) {}
 
         GlassCapsuleButton ver = new GlassCapsuleButton(this);
-        ver.setText("当前版本：v" + version);
+        ver.setText(L.t(this, "cur_version") + version);
         ver.setClickable(false);
 
         GlassCapsuleButton check = new GlassCapsuleButton(this);
-        check.setText("检查更新");
+        check.setText(L.t(this, "check_update"));
         check.setOnClickListener(v ->
-                Toast.makeText(this, "已是最新版本", Toast.LENGTH_SHORT).show());
+                Toast.makeText(this, L.t(this, "latest"), Toast.LENGTH_SHORT).show());
 
         LinearLayout.LayoutParams wl = new LinearLayout.LayoutParams(0, WRAP(), 1f);
         wl.setMargins(dp(6), 0, dp(6), 0);
-        int left = tablet ? dp(104) : dp(24);
+
         FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(MATCH(), WRAP());
         fp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-        fp.leftMargin = left;
+        fp.leftMargin = tablet ? dp(104) : dp(24);
         fp.rightMargin = dp(24);
         fp.bottomMargin = dp(108);
         tab2Footer.setLayoutParams(fp);
@@ -400,62 +394,25 @@ public class MainActivity extends Activity {
     }
 
     // ------------------------------------------------------------------
-    // 导航三：10 行"二十字描述 + 开关"，交替排布
+    // 导航三：描述行 + 整行开关，纵向交替（共 10 组）
     // ------------------------------------------------------------------
 
     private View buildTab3() {
         LinearLayout inner = newInner(112);
-        for (int i = 0; i < 10; i++) {
-            final int idx = i;
-            String key = "t3_s" + (i + 1);
+        TextView title = new TextView(this);
+        title.setText(L.t(this, "tab3_title"));
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(18);
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(MATCH(), WRAP());
+        tlp.setMargins(0, dp(8), 0, dp(16));
+        inner.addView(title, tlp);
 
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setGravity(Gravity.CENTER_VERTICAL);
-            GradientDrawable rowBg = new GradientDrawable();
-            rowBg.setCornerRadius(dp(28));
-            rowBg.setColor(0x331C1C1E);
-            rowBg.setStroke(dp(1), 0x40FFFFFF);
-            row.setBackground(rowBg);
-            row.setPadding(dp(16), dp(10), dp(16), dp(10));
-
-            TextView desc = new TextView(this);
-            desc.setText((i + 1) + ". " + DESC20);
-            desc.setTextColor(Color.WHITE);
-            desc.setTextSize(13);
-
-            GlassCapsuleButton indicator = new GlassCapsuleButton(this);
-            indicator.setClickable(false);
-            tab3Indicators[i] = indicator;
-            LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(dp(72), WRAP());
-
-            LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(0, WRAP(), 1f);
-
-            // 交替：偶数行 描述在左/开关在右；奇数行 开关在左/描述在右
-            if (i % 2 == 0) {
-                row.addView(desc, dlp);
-                row.addView(indicator, ilp);
-            } else {
-                row.addView(indicator, ilp);
-                row.addView(desc, dlp);
-            }
-
-            row.setOnClickListener(v -> {
-                boolean nx = !sp.getBoolean(key, false);
-                sp.edit().putBoolean(key, nx).apply();
-                refreshTab3Row(idx);
-            });
-
-            inner.addView(block(row));
+        for (int i = 1; i <= 10; i++) {
+            String key = "t3_s" + i;
+            inner.addView(label(L.desc3(this, i)));   // 描述行
+            inner.addView(block(makeOnOffSwitch(key))); // 整行开关
         }
         return inner;
-    }
-
-    private void refreshTab3Row(int i) {
-        boolean on = sp.getBoolean("t3_s" + (i + 1), false);
-        GlassCapsuleButton ind = tab3Indicators[i];
-        ind.setGlassSelected(on);
-        ind.setText(on ? "开" : "关");
     }
 
     // ------------------------------------------------------------------
@@ -464,15 +421,13 @@ public class MainActivity extends Activity {
 
     private void buildNav() {
         nav = new GlassNavBar(this);
-        nav.addItem(resIcon(android.R.drawable.ic_menu_view), "导航一");
-        nav.addItem(resIcon(android.R.drawable.ic_menu_manage), "导航二");
-        nav.addItem(resIcon(android.R.drawable.ic_menu_agenda), "导航三");
-
+        nav.addItem(resIcon(android.R.drawable.ic_menu_view), L.t(this, "nav1"));
+        nav.addItem(resIcon(android.R.drawable.ic_menu_manage), L.t(this, "nav2"));
+        nav.addItem(resIcon(android.R.drawable.ic_menu_agenda), L.t(this, "nav3"));
         if (tablet) {
             nav.setOrientation(LinearLayout.VERTICAL);
             nav.setSideWidthDp(72f);
         }
-
         nav.setOnItemSelectedListener(this::selectTab);
     }
 
@@ -539,7 +494,8 @@ public class MainActivity extends Activity {
     // ------------------------------------------------------------------
 
     private void loadAll() {
-        for (String key : switchBtns.keySet()) applySwitch(key);
+        for (String key : switchBtns.keySet()) applyLabeled(key);
+        for (String key : onOffBtns.keySet()) applyOnOff(key);
         refreshDialog();
         refreshLang();
         refreshInput();
@@ -550,43 +506,33 @@ public class MainActivity extends Activity {
 
         int op = sp.getInt("t1_opacity", 50);
         opacitySeek.setProgress(op);
-        opacityValue.setText("当前透明度：" + op + "%");
+        opacityValue.setText(L.t(this, "cur_opacity") + op + "%");
         opacityPreview.setAlpha(op / 100f);
-
-        for (int i = 0; i < 10; i++) refreshTab3Row(i);
     }
 
     private void refreshDialog() {
-        btnDialog.setText("弹窗选项" + (sp.getInt("t1_dialog", 0) + 1));
+        btnDialog.setText(L.dialogOpt(this, sp.getInt("t1_dialog", 0) + 1));
     }
 
     private void refreshLang() {
-        btnLang.setGlassSelected(true);
-        btnLang.setText("当前语言：" + LANGS[sp.getInt("t1_lang", 0)]);
+        btnLang.setGlassSelected(false);
+        btnLang.setText(L.t(this, "cur_lang") + L.langName(L.idx(this)));
     }
 
     private void refreshInput() {
         String s = sp.getString("t1_input", "");
-        btnInput.setText(s == null || s.isEmpty() ? "点击输入文本" : s);
+        btnInput.setText(s == null || s.isEmpty() ? L.t(this, "tap_input") : s);
     }
 
     private void refreshColors() {
         int sel = sp.getInt("t1_color", 0);
+        int[] vals = {0xFFFF3B30, 0xFF34C759, 0xFF0A84FF};
         for (int i = 0; i < 3; i++) {
             GradientDrawable d = new GradientDrawable();
             d.setShape(GradientDrawable.OVAL);
-            d.setColor(COLORS[i]);
+            d.setColor(vals[i]);
             if (i == sel) d.setStroke(dp(4), Color.WHITE);
             colorSwatches[i].setBackground(d);
         }
-    }
-
-    private static String cn(int n) {
-        String[] d = {"零", "一", "二", "三", "四", "五", "六", "七", "八", "九"};
-        if (n < 10) return d[n];
-        if (n == 10) return "十";
-        if (n < 20) return "十" + d[n - 10];
-        if (n == 20) return "二十";
-        return String.valueOf(n);
     }
 }

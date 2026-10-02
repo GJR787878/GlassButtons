@@ -212,6 +212,7 @@ public class GlassNavBar extends FrameLayout {
         for (int i = 0; i < mItemViews.size(); i++) {
             getInner().updateViewLayout(mItemViews.get(i), makeItemParams());
         }
+        applyGlassBackground(); // 渐变方向随导航方向改变
         requestLayout();
     }
 
@@ -259,16 +260,22 @@ public class GlassNavBar extends FrameLayout {
 
     private void applyGlassBackground() {
         float density = getResources().getDisplayMetrics().density;
-        // 磨砂玻璃效果：上白下透（顶部更实、底部更透，内容透出）
         GradientDrawable bg = new GradientDrawable();
         bg.setShape(GradientDrawable.RECTANGLE);
         bg.setCornerRadius(Math.round(mCornerRadiusDp * density));
-        // 从深灰半透明到稍浅的深灰，不那么白
-        int[] colors = {0xF06A6A72, 0x882C2C2E}; // 上白下透磨砂：94% 较白的深灰 → 53% 更深更透
+        // 磨砂配色：靠屏幕边缘一侧更实更白，靠内容一侧更透
+        int[] colors = {0xF06A6A72, 0x882C2C2E};
         bg.setColors(colors);
-        bg.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        if (mOrientation == LinearLayout.VERTICAL) {
+            // 左侧竖排侧栏：左（屏幕外缘）更实 → 右（内容侧）更透
+            bg.setOrientation(GradientDrawable.Orientation.LEFT_RIGHT);
+        } else {
+            // 底部横排导航：上（屏幕外缘）更实 → 下（内容侧）更透
+            bg.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        }
         // 1dp 淡白描边
         bg.setStroke(Math.round(1 * density), 0x55FFFFFF);
         setBackground(bg);
     }
 }
+
