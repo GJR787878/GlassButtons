@@ -27,10 +27,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.gjr.glassbutton.GlassCapsuleButton;
+import com.gjr.glassbutton.GlassDialog;
 import com.gjr.glassbutton.GlassNavBar;
 import com.gjr.glassbutton.GlassRadioButton;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * GlassButtons 综合演示（纯 Java、无 XML 布局、无第三方依赖）。
@@ -269,39 +273,14 @@ public class MainActivity extends Activity {
     }
 
     private void showChoiceDialog() {
-        LinearLayout box = darkBox();
-        box.addView(darkTitle(L.t(this, "dlg_title")));
-
-        ScrollView sv = new ScrollView(this);
-        dialogGroup = new RadioGroup(this);
-        dialogGroup.setOrientation(RadioGroup.VERTICAL);
+        // 5 个选项 → 居中弹窗（≤阈值 5）
+        List<String> items = new ArrayList<>();
+        for (int i = 0; i < 5; i++) items.add(L.dialogOpt(this, i + 1));
         int sel = sp.getInt("t1_dialog", 0);
-        for (int i = 0; i < 5; i++) {
-            GlassRadioButton rb = new GlassRadioButton(this);
-            rb.setText(L.dialogOpt(this, i + 1));
-            rb.setId(View.generateViewId());
-            final int idx = i;
-            rb.setOnClickListener(v -> {
-                sp.edit().putInt("t1_dialog", idx).apply();
-                refreshDialog();
-            });
-            if (i == sel) rb.setChecked(true);
-            RadioGroup.LayoutParams lp = new RadioGroup.LayoutParams(MATCH(), WRAP());
-            lp.setMargins(0, 0, 0, dp(10));
-            dialogGroup.addView(rb, lp);
-        }
-        sv.addView(dialogGroup, new ScrollView.LayoutParams(MATCH(), WRAP()));
-        box.addView(sv);
-
-        GlassCapsuleButton done = new GlassCapsuleButton(this);
-        done.setText(L.t(this, "done"));
-        LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(MATCH(), WRAP());
-        bp.topMargin = dp(16);
-        box.addView(done, bp);
-
-        Dialog dlg = darkDialog(box);
-        done.setOnClickListener(v -> dlg.dismiss());
-        dlg.show();
+        GlassDialog.showChoice(this, L.t(this, "dlg_title"), items, sel, (idx, item) -> {
+            sp.edit().putInt("t1_dialog", idx).apply();
+            refreshDialog();
+        });
     }
 
     private void showInputDialog() {
