@@ -62,7 +62,7 @@ public class GlassRadioButton extends RadioButton {
         float borderPx = (isChecked() ? 2f : 1f) * density;
         mGlassDrawable = new GlassButtonDrawable(cornerPx, borderPx, isChecked());
         setBackground(mGlassDrawable);
-        setTextColor(isChecked() ? GlassButtonStyle.COLOR_ACCENT : GlassButtonStyle.COLOR_WHITE);
+        setTextColor(isChecked() ? GlassButtonStyle.getAccentColor() : GlassButtonStyle.COLOR_WHITE);
     }
 
     @Override
