@@ -2,12 +2,14 @@ package com.gjr.glassbutton.demo;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.InputType;
@@ -17,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.view.WindowManager;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -296,7 +299,7 @@ public class MainActivity extends Activity {
         bp.topMargin = dp(16);
         box.addView(done, bp);
 
-        AlertDialog dlg = darkDialog(box);
+        Dialog dlg = darkDialog(box);
         done.setOnClickListener(v -> dlg.dismiss());
         dlg.show();
     }
@@ -333,7 +336,7 @@ public class MainActivity extends Activity {
         rp.topMargin = dp(16);
         box.addView(row, rp);
 
-        AlertDialog dlg = darkDialog(box);
+        Dialog dlg = darkDialog(box);
         cancel.setOnClickListener(v -> dlg.dismiss());
         ok.setOnClickListener(v -> {
             sp.edit().putString("t1_input", et.getText().toString()).apply();
@@ -472,19 +475,31 @@ public class MainActivity extends Activity {
         return t;
     }
 
-    private AlertDialog darkDialog(View content) {
-        AlertDialog dlg = new AlertDialog.Builder(this,
-                android.R.style.Theme_Material_Dialog_Alert).create();
-        dlg.setView(content);
-        dlg.setOnShowListener(d -> {
-            android.view.Window w = dlg.getWindow();
-            w.setBackgroundDrawable(new ColorDrawable(0xFF1C1C1E));
-            // 显式居中，避免部分 ROM 上弹窗偏下
-            w.setGravity(android.view.Gravity.CENTER);
-            android.view.WindowManager.LayoutParams lp = w.getAttributes();
-            lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.88f);
-            w.setAttributes(lp);
-        });
+    private Dialog darkDialog(View content) {
+        // 用透明主题 Dialog，完全摆脱 AlertDialog 主题的默认偏移
+        Dialog dlg = new Dialog(this, android.R.style.Theme_Translucent_NoTitleBar);
+
+        // 圆角容器包裹内容
+        FrameLayout wrapper = new FrameLayout(this);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFF1C1C1E);
+        bg.setCornerRadius(dp(20));
+        wrapper.setBackground(bg);
+        wrapper.setPadding(dp(20), dp(20), dp(20), dp(20));
+        wrapper.addView(content, new FrameLayout.LayoutParams(MATCH(), WRAP()));
+
+        dlg.setContentView(wrapper);
+        android.view.Window w = dlg.getWindow();
+        w.setBackgroundDrawable(new ColorDrawable(0x00000000));
+        w.setGravity(android.view.Gravity.CENTER);
+        WindowManager.LayoutParams lp = w.getAttributes();
+        lp.dimAmount = 0.6f;
+        lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.88f);
+        lp.x = 0;
+        lp.y = 0;
+        lp.horizontalMargin = 0;
+        lp.verticalMargin = 0;
+        w.setAttributes(lp);
         return dlg;
     }
 
