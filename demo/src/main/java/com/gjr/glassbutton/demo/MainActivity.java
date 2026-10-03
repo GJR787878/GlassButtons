@@ -40,7 +40,6 @@ public class MainActivity extends Activity {
     private SharedPreferences sp;
     private FrameLayout root;
     private ScrollView tab1, tab2, tab3;
-    private LinearLayout tab2Footer;
     private GlassNavBar nav;
     private boolean tablet;
 
@@ -81,9 +80,6 @@ public class MainActivity extends Activity {
         root.addView(tab3, new FrameLayout.LayoutParams(MATCH(), MATCH()));
         tab2.setVisibility(View.GONE);
         tab3.setVisibility(View.GONE);
-
-        buildTab2Footer();
-        root.addView(tab2Footer);
 
         buildNav();
         root.addView(nav, navParams());
@@ -352,19 +348,21 @@ public class MainActivity extends Activity {
     // ------------------------------------------------------------------
 
     private View buildTab2() {
-        LinearLayout inner = newInner(210);
+        LinearLayout inner = newInner(112);
         for (int i = 1; i <= 20; i++) {
             inner.addView(label(L.swName(this, i)));
             inner.addView(block(makeLabeledSwitch("t2_s" + i, L.swName(this, i))));
         }
+        // 版本 + 检查更新：放在 ScrollView 内容末尾，随内容滚动
+        inner.addView(buildVersionRow());
         return inner;
     }
 
-    private void buildTab2Footer() {
-        tab2Footer = new LinearLayout(this);
-        tab2Footer.setOrientation(LinearLayout.HORIZONTAL);
-        tab2Footer.setGravity(Gravity.CENTER);
-        tab2Footer.setVisibility(View.GONE);
+    /** 版本信息 + 检查更新（水平排列，随内容滚动）。 */
+    private View buildVersionRow() {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER);
 
         String version = "1.0";
         try {
@@ -382,15 +380,9 @@ public class MainActivity extends Activity {
 
         LinearLayout.LayoutParams wl = new LinearLayout.LayoutParams(0, WRAP(), 1f);
         wl.setMargins(dp(6), 0, dp(6), 0);
-
-        FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(MATCH(), WRAP());
-        fp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-        fp.leftMargin = tablet ? dp(104) : dp(24);
-        fp.rightMargin = dp(24);
-        fp.bottomMargin = dp(108);
-        tab2Footer.setLayoutParams(fp);
-        tab2Footer.addView(ver, wl);
-        tab2Footer.addView(check, wl);
+        row.addView(ver, wl);
+        row.addView(check, wl);
+        return block(row);
     }
 
     // ------------------------------------------------------------------
@@ -456,7 +448,7 @@ public class MainActivity extends Activity {
         tab1.setVisibility(index == 0 ? View.VISIBLE : View.GONE);
         tab2.setVisibility(index == 1 ? View.VISIBLE : View.GONE);
         tab3.setVisibility(index == 2 ? View.VISIBLE : View.GONE);
-        tab2Footer.setVisibility(index == 1 ? View.VISIBLE : View.GONE);
+
     }
 
     // ------------------------------------------------------------------
