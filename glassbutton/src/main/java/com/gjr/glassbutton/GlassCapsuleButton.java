@@ -31,6 +31,9 @@ public class GlassCapsuleButton extends Button {
 
     private boolean mGlassSelected = false;
     private float mCornerRadiusDp = 28f;
+    private float mTextSizeSp = 14f;
+    private int mPaddingH = 24;
+    private int mPaddingV = 14;
     private GlassButtonDrawable mGlassDrawable;
 
     public GlassCapsuleButton(Context context) {
@@ -56,10 +59,10 @@ public class GlassCapsuleButton extends Button {
 
     private void init() {
         setAllCaps(false);
-        setTextSize(14);
+        setTextSize(mTextSizeSp);
         float density = getResources().getDisplayMetrics().density;
-        setPadding(Math.round(24 * density), Math.round(14 * density),
-                Math.round(24 * density), Math.round(14 * density));
+        setPadding(Math.round(mPaddingH * density), Math.round(mPaddingV * density),
+                Math.round(mPaddingH * density), Math.round(mPaddingV * density));
         applyGlassBackground();
     }
 
@@ -69,7 +72,7 @@ public class GlassCapsuleButton extends Button {
         float borderPx = (mGlassSelected ? 2f : 1f) * density;
         mGlassDrawable = new GlassButtonDrawable(cornerPx, borderPx, mGlassSelected);
         setBackground(mGlassDrawable);
-        setTextColor(mGlassSelected ? GlassButtonStyle.COLOR_ACCENT : GlassButtonStyle.COLOR_WHITE);
+        setTextColor(mGlassSelected ? GlassButtonStyle.getAccentColor() : GlassButtonStyle.COLOR_WHITE);
     }
 
     /**
@@ -96,5 +99,24 @@ public class GlassCapsuleButton extends Button {
 
     public float getGlassCornerRadius() {
         return mCornerRadiusDp;
+    }
+
+    /** 设置文字大小（sp）。 */
+    public void setGlassTextSize(float textSizeSp) {
+        mTextSizeSp = textSizeSp;
+        setTextSize(mTextSizeSp);
+    }
+
+    public float getGlassTextSize() {
+        return mTextSizeSp;
+    }
+
+    /** 设置内边距（dp）。 */
+    public void setGlassPadding(int horizontalDp, int verticalDp) {
+        mPaddingH = horizontalDp;
+        mPaddingV = verticalDp;
+        float density = getResources().getDisplayMetrics().density;
+        setPadding(Math.round(mPaddingH * density), Math.round(mPaddingV * density),
+                Math.round(mPaddingH * density), Math.round(mPaddingV * density));
     }
 }
