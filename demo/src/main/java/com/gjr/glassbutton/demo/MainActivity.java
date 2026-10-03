@@ -476,8 +476,15 @@ public class MainActivity extends Activity {
         AlertDialog dlg = new AlertDialog.Builder(this,
                 android.R.style.Theme_Material_Dialog_Alert).create();
         dlg.setView(content);
-        dlg.setOnShowListener(d -> dlg.getWindow()
-                .setBackgroundDrawable(new ColorDrawable(0xFF1C1C1E)));
+        dlg.setOnShowListener(d -> {
+            android.view.Window w = dlg.getWindow();
+            w.setBackgroundDrawable(new ColorDrawable(0xFF1C1C1E));
+            // 显式居中，避免部分 ROM 上弹窗偏下
+            w.setGravity(android.view.Gravity.CENTER);
+            android.view.WindowManager.LayoutParams lp = w.getAttributes();
+            lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.88f);
+            w.setAttributes(lp);
+        });
         return dlg;
     }
 
