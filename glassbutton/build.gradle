@@ -28,14 +28,13 @@ dependencies {
     // 纯 Android framework 实现，无任何第三方依赖
 }
 
-// JitPack 发布配置
+// JitPack 发布配置：version 由 JitPack 自动注入（= git tag 名），无需硬编码
 afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
                 groupId = 'com.github.GJR787878'
                 artifactId = 'GlassButtons'
-                version = '1.0.5'
                 from components.release
             }
         }
