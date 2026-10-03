@@ -2,7 +2,7 @@
 
 从 [RamStatusBar](https://github.com/GJR787878/RamStatusBar) 提取的苹果风格毛玻璃按钮，封装为独立 Android 组件库，可直接在其他项目中调用。
 
-> 📦 **最新 Demo APK 下载**：[v1.0 GlassButtons-Demo-v1.0.apk](https://github.com/GJR787878/GlassButtons/releases/download/v1.0/GlassButtons-Demo-v1.0.apk)
+> 📦 **最新 Demo APK 下载**：[v1.1 GlassButtons-Demo-v1.1.apk](https://github.com/GJR787878/GlassButtons/releases/download/v1.1/GlassButtons-Demo-v1.1.apk)
 > 安装后滑动页面，观察半透明按钮下方的文字穿透效果。
 
 ## 视觉效果
@@ -130,7 +130,7 @@ dependencyResolutionManagement {
 **2. app 模块 build.gradle 添加依赖：**
 ```groovy
 dependencies {
-    implementation 'com.github.GJR787878:GlassButtons:v1.0.1'
+    implementation 'com.github.GJR787878:GlassButtons:v1.1'
 }
 ```
 
