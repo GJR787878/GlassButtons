@@ -47,7 +47,11 @@ public class GlassNavBar extends FrameLayout {
     private float mCornerRadiusDp = 28f;
     private float mHeightDp = 76f;
     private float mSideWidthDp = 72f;
+    private float mLabelTextSizeSp = 12f;
+    private float mIconSizeDp = 24f;
     private int mOrientation = LinearLayout.HORIZONTAL;
+    /** 背景渐变：[靠屏幕外缘色, 靠内容侧色] */
+    private int[] mBgGradient = {0xF06A6A72, 0x882C2C2E};
 
     public interface OnItemSelectedListener {
         void onItemSelected(int index);
@@ -66,7 +70,7 @@ public class GlassNavBar extends FrameLayout {
         float density = context.getResources().getDisplayMetrics().density;
         mCornerRadiusDp = 28f;
         mHeightDp = 76f;
-        mSideWidthDp = 200f;
+        mSideWidthDp = 72f;
         init();
     }
 
@@ -107,13 +111,13 @@ public class GlassNavBar extends FrameLayout {
         iconView.setImageDrawable(icon);
         iconView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(
-                Math.round(24 * density), Math.round(24 * density));
+                Math.round(mIconSizeDp * density), Math.round(mIconSizeDp * density));
         iconParams.gravity = Gravity.CENTER;
         item.addView(iconView, iconParams);
 
         TextView labelView = new TextView(ctx);
         labelView.setText(label);
-        labelView.setTextSize(12);
+        labelView.setTextSize(mLabelTextSizeSp);
         labelView.setGravity(Gravity.CENTER);
         labelView.setPadding(0, Math.round(2 * density), 0, 0);
         LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(
@@ -169,11 +173,11 @@ public class GlassNavBar extends FrameLayout {
             float density = getResources().getDisplayMetrics().density;
             float radius = Math.round(mCornerRadiusDp * density);
             GradientDrawable bg = new GradientDrawable();
-            bg.setColor(0x4DFFFFFF); // 30% 白，更实一点
+            bg.setColor(GlassButtonStyle.getSelectedBgColor());
             bg.setCornerRadius(radius);
             item.setBackground(bg);
-            icon.setColorFilter(GlassButtonStyle.COLOR_ACCENT, PorterDuff.Mode.SRC_IN);
-            label.setTextColor(GlassButtonStyle.COLOR_ACCENT);
+            icon.setColorFilter(GlassButtonStyle.getAccentColor(), PorterDuff.Mode.SRC_IN);
+            label.setTextColor(GlassButtonStyle.getAccentColor());
         } else {
             item.setBackground(null);
             icon.setColorFilter(GlassButtonStyle.COLOR_WHITE, PorterDuff.Mode.SRC_IN);
@@ -258,14 +262,41 @@ public class GlassNavBar extends FrameLayout {
         return lp;
     }
 
+    // ==================== 外观配置 setter ====================
+
+    /** 设置导航项文字大小（sp）。 */
+    public void setLabelTextSize(float textSizeSp) {
+        mLabelTextSizeSp = textSizeSp;
+        for (TextView tv : mLabels) tv.setTextSize(mLabelTextSizeSp);
+    }
+
+    /** 设置导航项图标大小（dp）。 */
+    public void setIconSizeDp(float iconSizeDp) {
+        mIconSizeDp = iconSizeDp;
+        float density = getResources().getDisplayMetrics().density;
+        for (ImageView iv : mIcons) {
+            ViewGroup.LayoutParams lp = iv.getLayoutParams();
+            lp.width = Math.round(mIconSizeDp * density);
+            lp.height = Math.round(mIconSizeDp * density);
+            iv.setLayoutParams(lp);
+        }
+    }
+
+    /** 设置背景渐变色（[靠屏幕外缘色, 靠内容侧色]）。 */
+    public void setBgGradient(int[] colors) {
+        if (colors != null && colors.length == 2) {
+            mBgGradient = colors;
+            applyGlassBackground();
+        }
+    }
+
     private void applyGlassBackground() {
         float density = getResources().getDisplayMetrics().density;
         GradientDrawable bg = new GradientDrawable();
         bg.setShape(GradientDrawable.RECTANGLE);
         bg.setCornerRadius(Math.round(mCornerRadiusDp * density));
         // 磨砂配色：靠屏幕边缘一侧更实更白，靠内容一侧更透
-        int[] colors = {0xF06A6A72, 0x882C2C2E};
-        bg.setColors(colors);
+        bg.setColors(mBgGradient);
         if (mOrientation == LinearLayout.VERTICAL) {
             // 左侧竖排侧栏：左（屏幕外缘）更实 → 右（内容侧）更透
             bg.setOrientation(GradientDrawable.Orientation.LEFT_RIGHT);
