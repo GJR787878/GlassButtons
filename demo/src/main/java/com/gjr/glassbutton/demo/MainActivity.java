@@ -476,10 +476,9 @@ public class MainActivity extends Activity {
     }
 
     private Dialog darkDialog(View content) {
-        // 用透明主题 Dialog，完全摆脱 AlertDialog 主题的默认偏移
         Dialog dlg = new Dialog(this, android.R.style.Theme_Translucent_NoTitleBar);
 
-        // 圆角容器包裹内容
+        // 圆角容器包裹内容，高度 WRAP_CONTENT
         FrameLayout wrapper = new FrameLayout(this);
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(0xFF1C1C1E);
@@ -488,17 +487,17 @@ public class MainActivity extends Activity {
         wrapper.setPadding(dp(20), dp(20), dp(20), dp(20));
         wrapper.addView(content, new FrameLayout.LayoutParams(MATCH(), WRAP()));
 
-        dlg.setContentView(wrapper);
+        dlg.setContentView(wrapper, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         android.view.Window w = dlg.getWindow();
         w.setBackgroundDrawable(new ColorDrawable(0x00000000));
         w.setGravity(android.view.Gravity.CENTER);
         WindowManager.LayoutParams lp = w.getAttributes();
         lp.dimAmount = 0.6f;
         lp.width = (int) (getResources().getDisplayMetrics().widthPixels * 0.88f);
+        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
         lp.x = 0;
         lp.y = 0;
-        lp.horizontalMargin = 0;
-        lp.verticalMargin = 0;
         w.setAttributes(lp);
         return dlg;
     }
